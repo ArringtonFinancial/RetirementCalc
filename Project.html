@@ -81,6 +81,12 @@
       margin-top: 20px;
       max-width: 100%;
     }
+    .disclosure {
+      margin-top: 20px;
+      font-size: 12px;
+      text-align: left;
+      color: #666;
+    }
     @media (max-width: 600px) {
       .input-group {
         flex-direction: column;
@@ -120,6 +126,14 @@
       <button class="reset-btn" onclick="resetInputs()">Reset</button>
     </div>
     <canvas id="retirementChart"></canvas>
+    <div class="disclosure" id="disclosure">
+      <p><strong>Disclosures:</strong></p>
+      <p>The analysis provided by this tool is based solely on the information provided by you. All examples, if any, are hypothetical and for illustrative purposes and do not represent current or future performance of any specific investment. No guarantees are made as to the accuracy of any illustration or calculation. This information does not serve, either directly or indirectly, as legal, financial or tax advice and you should always consult a qualified professional legal, financial and/or tax advisor when making decisions relative to your individual tax situation. All investments carry a degree of risk, and past performance is not a guarantee of future results. Generally speaking, the greater the return, the greater the risk.</p>
+      <p>This hypothetical chart shows potential retirement savings at different rates of return. The accumulated amounts assume 12 months per year, contributions made at the beginning of each month, and varying annual rates of return compounded monthly at a specific retirement age. No specific investment product is reflected and no fees, charges or taxes have been taken into account in the charts above.</p>
+      <p>Investment advisor representative and registered representative of, and securities and investment advisory services offered through Voya Financial Advisors, Inc. (member SIPC).</p>
+      <p>Arrington Financial is not a subsidiary of nor controlled by Voya Financial Advisors.</p>
+      <p>CN3408373_0226</p>
+    </div>
   </div>
 
   <script>
@@ -217,23 +231,33 @@
     }
 
     function exportPDF() {
-      html2canvas(document.querySelector("#chartContainer")).then(canvas => {
-          const pdf = new jspdf.jsPDF();
-          const title = "Retirement Savings Calculator";
-          const balance = document.getElementById("balance").value;
-          const monthly = document.getElementById("monthly").value;
-          const currentAge = document.getElementById("currentAge").value;
-          const retirementAge = document.getElementById("retirementAge").value;
+      const pdf = new jspdf.jsPDF("p", "mm", "a4");
+      const title = "Retirement Savings Calculator";
+      const balance = document.getElementById("balance").value;
+      const monthly = document.getElementById("monthly").value;
+      const currentAge = document.getElementById("currentAge").value;
+      const retirementAge = document.getElementById("retirementAge").value;
+      const disclosure = document.getElementById("disclosure").innerText;
 
-          pdf.setFontSize(18);
-          pdf.text(title, 10, 20);
-          pdf.setFontSize(12);
-          pdf.text(`Current Balance: ${balance}`, 10, 30);
-          pdf.text(`Monthly Savings: ${monthly}`, 10, 40);
-          pdf.text(`Current Age: ${currentAge}`, 10, 50);
-          pdf.text(`Retirement Age: ${retirementAge}`, 10, 60);
+      // Add title and inputs
+      pdf.setFontSize(18);
+      pdf.text(title, 10, 20);
+      pdf.setFontSize(12);
+      pdf.text(`Current Balance: ${balance}`, 10, 30);
+      pdf.text(`Monthly Savings: ${monthly}`, 10, 40);
+      pdf.text(`Current Age: ${currentAge}`, 10, 50);
+      pdf.text(`Retirement Age: ${retirementAge}`, 10, 60);
 
-          pdf.addImage(canvas.toDataURL("image/png"), "PNG", 10, 70, 180, 120);
+      // Add chart image
+      html2canvas(document.querySelector("#retirementChart")).then(canvas => {
+          const imgData = canvas.toDataURL("image/png");
+          pdf.addImage(imgData, "PNG", 10, 70, 180, 120);
+
+          // Add disclosure
+          pdf.setFontSize(10);
+          pdf.text(disclosure, 10, 200, { maxWidth: 180 });
+
+          // Save PDF
           pdf.save("Retirement_Calculator.pdf");
       });
     }
