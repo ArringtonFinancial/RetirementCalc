@@ -232,6 +232,12 @@
 
     function exportPDF() {
       const pdf = new jspdf.jsPDF("p", "mm", "a4");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 10; // Margin in mm
+      const maxWidth = pageWidth - 2 * margin; // Max width for content
+      const maxHeight = pageHeight - 2 * margin; // Max height for content
+
       const title = "Retirement Savings Calculator";
       const balance = document.getElementById("balance").value;
       const monthly = document.getElementById("monthly").value;
@@ -241,21 +247,29 @@
 
       // Add title and inputs
       pdf.setFontSize(18);
-      pdf.text(title, 10, 20);
+      pdf.text(title, margin, margin + 10);
       pdf.setFontSize(12);
-      pdf.text(`Current Balance: ${balance}`, 10, 30);
-      pdf.text(`Monthly Savings: ${monthly}`, 10, 40);
-      pdf.text(`Current Age: ${currentAge}`, 10, 50);
-      pdf.text(`Retirement Age: ${retirementAge}`, 10, 60);
+      pdf.text(`Current Balance: ${balance}`, margin, margin + 20);
+      pdf.text(`Monthly Savings: ${monthly}`, margin, margin + 30);
+      pdf.text(`Current Age: ${currentAge}`, margin, margin + 40);
+      pdf.text(`Retirement Age: ${retirementAge}`, margin, margin + 50);
 
       // Add chart image
       html2canvas(document.querySelector("#retirementChart")).then(canvas => {
           const imgData = canvas.toDataURL("image/png");
-          pdf.addImage(imgData, "PNG", 10, 70, 180, 120);
+          const imgWidth = maxWidth; // Use max width for the chart
+          const imgHeight = (canvas.height * imgWidth) / canvas.width; // Maintain aspect ratio
+
+          // Ensure the chart fits within the remaining page height
+          const remainingHeight = pageHeight - (margin + 60); // 60 is the space used by title and inputs
+          const scaledHeight = Math.min(imgHeight, remainingHeight);
+
+          pdf.addImage(imgData, "PNG", margin, margin + 60, imgWidth, scaledHeight);
 
           // Add disclosure
           pdf.setFontSize(10);
-          pdf.text(disclosure, 10, 200, { maxWidth: 180 });
+          const disclosureLines = pdf.splitTextToSize(disclosure, maxWidth);
+          pdf.text(disclosureLines, margin, margin + 60 + scaledHeight + 10);
 
           // Save PDF
           pdf.save("Retirement_Calculator.pdf");
